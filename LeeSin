@@ -1,17 +1,9 @@
 if GetObjectName(GetMyHero()) ~= "LeeSin" then return end
 
-if not pcall( require, "MapPositionGOS" ) then PrintChat("You are missing Walls Library - Go 
-
-download it and save it Common!") return end
-if not pcall( require, "Inspired" ) then PrintChat("You are missing Inspired.lua - Go 
-
-download it and save it Common!") return end
-if not pcall( require, "Deftlib" ) then PrintChat("You are missing Deftlib.lua - Go download 
-
-it and save it in Common!") return end
-if not pcall( require, "DamageLib" ) then PrintChat("You are missing DamageLib.lua - Go 
-
-download it and save it in Common!") return end
+if not pcall( require, "MapPositionGOS" ) then PrintChat("You are missing Walls Library - Go download it and save it Common!") return end
+if not pcall( require, "Inspired" ) then PrintChat("You are missing Inspired.lua - Go download it and save it Common!") return end
+if not pcall( require, "Deftlib" ) then PrintChat("You are missing Deftlib.lua - Go download it and save it in Common!") return end
+if not pcall( require, "DamageLib" ) then PrintChat("You are missing DamageLib.lua - Go download it and save it in Common!") return end
 
 local LeeSinMenu = MenuConfig("LeeSin", "LeeSin")
 LeeSinMenu:Menu("Combo", "Combo")
