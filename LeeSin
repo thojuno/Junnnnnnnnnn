@@ -1,0 +1,322 @@
+f GetObjectName(GetMyHero()) ~= "LeeSin" then return end
+
+if not pcall( require, "MapPositionGOS" ) then PrintChat("You are missing Walls Library - Go 
+
+download it and save it Common!") return end
+if not pcall( require, "Inspired" ) then PrintChat("You are missing Inspired.lua - Go 
+
+download it and save it Common!") return end
+if not pcall( require, "Deftlib" ) then PrintChat("You are missing Deftlib.lua - Go download 
+
+it and save it in Common!") return end
+if not pcall( require, "DamageLib" ) then PrintChat("You are missing DamageLib.lua - Go 
+
+download it and save it in Common!") return end
+
+local LeeSinMenu = MenuConfig("LeeSin", "LeeSin")
+LeeSinMenu:Menu("Combo", "Combo")
+LeeSinMenu.Combo:Boolean("Q", "Use Q", true)
+LeeSinMenu.Combo:Boolean("W", "Use W", true)
+LeeSinMenu.Combo:Boolean("E", "Use E", true)
+LeeSinMenu.Combo:Boolean("H", "Use Hydra", true)
+
+LeeSinMenu:Menu("Harass", "Harass")
+LeeSinMenu.Harass:Boolean("Q", "Use Q", true)
+LeeSinMenu.Harass:Boolean("W", "Use W", true)
+LeeSinMenu.Harass:Boolean("E", "Use E", true)
+LeeSinMenu.Harass:Boolean("H", "Use Hydra", true)
+
+LeeSinMenu:Menu("Killsteal", "Killsteal")
+LeeSinMenu.Killsteal:Boolean("W", "Killsteal with Q", true)
+LeeSinMenu.Killsteal:Boolean("W", "Killsteal with E", true)
+LeeSinMenu.Killsteal:Boolean("R", "Killsteal with R", true)
+LeeSinMenu:Menu("Misc", "Misc")
+if Ignite ~= nil then LeesinMenu.Misc:Boolean("Autoignite", "Auto Ignite", true) end
+LeeSinMenu.Misc:Boolean("Autolvl", "Auto level", true)
+LeeSinMenu.Misc:DropDown("Autolvltable", "Priority", 1, {"Q-E-W", "Q-W-E", "E-Q-W"})
+LeeSinMenu.Misc:KeyBinding("Flee", "Flee", string.byte("T"))
+LeeSinMenu.Misc:KeyBinding("WallJump", "WallJump", string.byte("G"))
+LeeSinMenu.Misc:Boolean("AutoE", "Auto E", true)
+
+LeeSinMenu:Menu("Drawings", "Drawings")
+LeeSinMenu.Drawings:Boolean("Q", "Draw Q Range", true)
+LeeSinMenu.Drawings:Boolean("W", "Draw W Range", true)
+LeeSinMenu.Drawings:Boolean("E", "Draw E Range", true)
+LeeSinMenu.Drawings:Boolean("R", "Draw R Range", true)
+LeeSinMenu.Drawings:Boolean("EQ", "Draw EQ Range", true)
+
+LeeSinMenu.Drawings:ColorPick("color", "Color Picker", {255,255,255,0})
+
+local InterruptMenu = MenuConfig("Interrupt (R)", "Interrupt")
+
+DelayAction(function()
+  local str = {[_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R"}
+  for i, spell in pairs(CHANELLING_SPELLS) do
+    for _,k in pairs(GetEnemyHeroes()) do
+      if spell["Name"] == GetObjectName(k) then
+      InterruptMenu:Boolean(GetObjectName(k).."Inter", "On "..GetObjectName(k).." "..(type
+
+(spell.Spellslot) == 'number' and str[spell.Spellslot]), true)
+      end
+    end
+  end
+end, 1)
+
+local QCast = 0
+local lastE = 0
+local lastlevel = GetLevel(myHero)-1
+
+OnDraw(function(myHero)
+local col = LeeSinMenu.Drawings.color:Value()
+local pos = GetOrigin(myHero)
+if LeeSinMenu.Drawings.Q:Value() then DrawCircle(pos,275,1,50,col) end
+if LeeSinMenu.Drawings.W:Value() then DrawCircle(pos,260,1,50,col) end
+if LeeSinMenu.Drawings.E:Value() then DrawCircle(pos,250,1,50,col) end
+if LeeSinMenu.Drawings.R:Value() then DrawCircle(pos,1100,1,0,col) end
+if LeeSinMenu.Drawings.EQ:Value() then DrawCircle(pos,525,1,0,col) end
+end)
+
+OnTick(function(myHero)
+  mousePos = GetMousePos()
+	local target = GetCurrentTarget()
+	
+	if IOW:Mode() == "Combo" then
+	  if IsReady(_W) and LeeSinMenu.Combo.W:Value() and ValidTarget(target, 440) and 
+
+GetDistance(target) > GetRange(myHero)+GetHitBox(myHero) then
+	  CastSkillShot(_W, GetOrigin(target))
+	  end
+	  
+	  if IsReady(_Q) and IsReady(_W) and LeeSinMenu.Combo.Q:Value() and 
+
+LeeSinMenu.Combo.W:Value() and ValidTarget(target, 715) and GetDistance(target) > GetRange
+
+(myHero)+GetHitBox(target) then
+	  CastSkillShot(_E, GetOrigin(target))
+	  DelayAction(function() CastSkillShot(_Q, GetOrigin(target)) end, 267)
+	  end
+	end
+	
+	if IOW:Mode() == "Harass" then
+	  if IsReady(_W) and LeeSinMenu.Harass.W:Value() and ValidTarget(target, 440) and 
+
+GetDistance(target) > GetRange(myHero)+GetHitBox(myHero) then
+	  CastSkillShot(_W, GetOrigin(target))
+	  end
+	  
+	  if IsReady(_Q) and IsReady(_E) and LeeSinMenu.Harass.Q:Value() and 
+
+LeeSinMenu.Harass.E:Value() and ValidTarget(target, 715) and GetDistance(target) > GetRange
+
+(myHero)+GetHitBox(myHero)*3 then
+	  CastSkillShot(_W, GetOrigin(target))
+	  DelayAction(function() CastSkillShot(_Q, GetOrigin(target)) end, 267)
+	  end
+	end
+
+	if IsReady(_W) and LeeSinMenu.Misc.AutoE:Value() and EnemiesAround2(GetOrigin
+
+(myHero),260,267) >= LeeSinMenu.Misc.AutoWCount:Value() then
+	CastSpell(_W)
+	end
+	
+	if LeeSinMenu.Misc.Flee:Value() then
+          MoveToXYZ(mousePos)
+          if IsReady(_W) then
+          CastSkillShot(_W, mousePos)
+          end
+          if not IsReady(_W) and IsReady(_Q) and lastE + 350 < GetTickCount() then
+          CastSkillShot(_Q, mousePos)
+          end
+        end
+	
+	for i,enemy in pairs(GetEnemyHeroes()) do
+    	
+	  if Ignite and LeeSinMenu.Misc.Autoignite:Value() then
+            if IsReady(Ignite) and 20*GetLevel(myHero)+50 > GetHP(enemy)+GetHPRegen(enemy)*3 
+
+and ValidTarget(enemy, 600) then
+            CastTargetSpell(enemy, Ignite)
+            end
+          end
+                
+  	  if IsReady(_E) and ValidTarget(enemy, 260) and LeeSinMenu.Killsteal.E:Value() and 
+
+GetHP(enemy) < getdmg("W",enemy) then
+  	  CastSpell(_E)
+	  elseif IsReady(_R) and GetCastName(myHero, _R) ~= "LeeSinFengShuiEngine" and 
+
+ValidTarget(enemy, 1100) and LeeSinMenu.Killsteal.R:Value() and GetHP(enemy) < getdmg
+
+("R",enemy) then
+	  Cast(_R,enemy)
+          end
+
+        end
+	
+if LeeSinMenu.Misc.Autolvl:Value() then  
+  if GetLevel(myHero) > lastlevel then
+    if LeeSinMenu.Misc.Autolvltable:Value() == 1 then leveltable = {_Q, _E, _W, _Q, _Q , _R, 
+
+_Q , _E, _Q , _E, _R, _E, _E, _W, _W, _R, _W, _W}
+    elseif LeeSinMenu.Misc.Autolvltable:Value() == 2 then leveltable = {_Q, _E, _W, _Q, _Q, 
+
+_R, _Q, _W, _Q, _W, _R, _W, _W, _E, _E, _R, _E, _E}
+    elseif LeeSinMenu.Misc.Autolvltable:Value() == 3 then leveltable = {_Q, _E, _W, _E, _E, 
+
+_R, _E, _Q, _E, _Q, _R, _Q, _Q, _W, _W, _R, _W, _W}
+    end
+    DelayAction(function() LevelSpell(leveltable[GetLevel(myHero)]) end, math.random
+
+(1000,3000))
+    lastlevel = GetLevel(myHero)
+  end
+end
+	
+end)
+
+OnProcessSpell(function(unit,spell)
+  if GetObjectType(unit) == Obj_AI_Hero and GetTeam(unit) ~= GetTeam(myHero) and IsReady(_E) 
+
+then
+    if CHANELLING_SPELLS[spell.name] then
+      if ValidTarget(unit, 260) and GetObjectName(unit) == CHANELLING_SPELLS
+
+[spell.name].Name and InterruptMenu[GetObjectName(unit).."Inter"]:Value() then 
+      CastSpell(_W)
+      end
+    end
+  end
+  
+  if unit == myHero then
+  
+    if spell.name == "LeeSinFeint" then
+    lastE = GetTickCount()
+    end
+	
+    local target = IOW:GetTarget()
+	
+    if spell.name:lower():find("attack") then
+    DelayAction(function()
+    	
+      if IOW:Mode() == "Combo" and ValidTarget(target) then
+      	if IsReady(_W) and LeeSinMenu.Combo.W:Value() then
+	CastSpell(_W)
+        elseif GetItemSlot(myHero, 3074) > 0 and IsReady(GetItemSlot(myHero, 3074)) and 
+
+LeeSinMenu.Combo.H:Value() then
+	CastSpell(GetItemSlot(myHero, 3074))
+	elseif GetItemSlot(myHero, 3077) > 0 and IsReady(GetItemSlot(myHero, 3077)) and 
+
+LeeSinMenu.Combo.H:Value() then
+	CastSpell(GetItemSlot(myHero, 3077))
+	elseif IsReady(_Q) and LeeSinMenu.Combo.Q:Value() then
+	CastSkillShot(_Q, GetOrigin(target))
+	end
+      end
+	   
+      if IOW:Mode() == "Harass" and ValidTarget(target) then
+      	if IsReady(_E) and LeeSinMenu.Harass.E:Value() then
+	CastSpell(_E)
+        elseif GetItemSlot(myHero, 3074) > 0 and IsReady(GetItemSlot(myHero, 3074)) and 
+
+LeeSinMenu.Harass.H:Value() then
+	CastSpell(GetItemSlot(myHero, 3074))
+	elseif GetItemSlot(myHero, 3077) > 0 and IsReady(GetItemSlot(myHero, 3077)) and 
+
+LeeSinMenu.Harass.H:Value() then
+	CastSpell(GetItemSlot(myHero, 3077))
+	elseif IsReady(_Q) and LeeSinMenu.Harass.Q:Value() then
+	CastSkillShot(_Q, GetOrigin(target)) 
+	end
+      end
+
+    end, GetWindUp(myHero)*1000 )
+    end
+	
+    if spell.name == "LeeSinMartyr" then
+    DelayAction(function()
+      if IOW:Mode() == "Combo" and ValidTarget(target) then
+        if IsReady(_Q) and LeeSinMenu.Combo.Q:Value() then
+	CastSkillShot(_Q, GetOrigin(target)) 
+	end
+      end
+	  
+      if IOW:Mode() == "Harass" and ValidTarget(target) then
+        if IsReady(_Q) and LeeSinMenu.Harass.Q:Value() then
+	CastSkillShot(_Q, GetOrigin(target)) 
+	end
+      end
+
+    end, spell.windUpTime*1000 )
+    end
+	
+    if spell.name == "LeeSinTriCleave" then
+    IOW:ResetAA()
+    end
+	
+    if spell.name == "ItemTiamatCleave" then
+    IOW:ResetAA()
+    DelayAction(function()
+      if IOW:Mode() == "Combo" and ValidTarget(target) then
+        if IsReady(_Q) and LeeSinMenu.Combo.Q:Value() then
+	CastSkillShot(_Q, GetOrigin(target)) 
+	end
+      end
+	  
+      if IOW:Mode() == "Harass" and ValidTarget(target) then
+        if IsReady(_Q) and LeeSinMenu.Harass.Q:Value() then
+	CastSkillShot(_Q, GetOrigin(target)) 
+	end
+      end
+    end, spell.windUpTime*1000 )
+    end
+	
+    if spell.name == "LeeSinFengShuiEngine" then
+    IOW:ResetAA()
+    DelayAction(function()
+	  if IOW:Mode() == "Combo" and ValidTarget(target) then
+	    if IsReady(_Q) and LeeSinMenu.Combo.Q:Value() then
+	    CastSkillShot(_Q, GetOrigin(target)) 
+	    end
+	  end
+	  
+	  if IOW:Mode() == "Harass" and ValidTarget(target) then
+	    if IsReady(_Q) and LeeSinMenu.Harass.Q:Value() then
+	    CastSkillShot(_Q, GetOrigin(target)) 
+	    end
+	  end
+    end, spell.windUpTime*1000 )
+    end
+	
+    if spell.name == "LeeSinizunablade" then
+    IOW:ResetAA()
+    DelayAction(function()
+      if IOW:Mode() == "Combo" and ValidTarget(target) then
+        if IsReady(_Q) and LeeSinMenu.Combo.Q:Value() then
+        CastSkillShot(_Q, GetOrigin(target)) 
+        end
+      end
+	  
+      if IOW:Mode() == "Harass" and ValidTarget(target) then
+        if IsReady(_Q) and LeeSinMenu.Harass.Q:Value() then
+        CastSkillShot(_Q, GetOrigin(target)) 
+	end
+      end
+    end, spell.windUpTime*1000 )
+    end
+	
+  end 
+end)
+
+OnUpdateBuff(function(unit,buff)
+  if unit == myHero and buff.Name == "LeeSinTriCleave" then
+  QCast = buff.Count
+  end
+end)
+
+OnRemoveBuff(function(unit,buff)
+  if unit == myHero and buff.Name == "LeeSinTriCleave" then
+  QCast = 0
+  end
+end)
