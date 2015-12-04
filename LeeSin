@@ -1,4 +1,4 @@
-f GetObjectName(GetMyHero()) ~= "LeeSin" then return end
+if GetObjectName(GetMyHero()) ~= "LeeSin" then return end
 
 if not pcall( require, "MapPositionGOS" ) then PrintChat("You are missing Walls Library - Go 
 
