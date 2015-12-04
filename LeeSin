@@ -15,7 +15,7 @@ download it and save it in Common!") return end
 
 local LeeSinMenu = MenuConfig("LeeSin", "LeeSin")
 LeeSinMenu:Menu("Combo", "Combo")
-LeeSinMenu.Combo:Boolean("Q", "Use Q", true)
+LeeSinMenu.Combo:Boolean("Q", "Use Q", "Use Q in combo", true)
 LeeSinMenu.Combo:Boolean("W", "Use W", true)
 LeeSinMenu.Combo:Boolean("E", "Use E", true)
 LeeSinMenu.Combo:Boolean("H", "Use Hydra", true)
