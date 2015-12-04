@@ -4,34 +4,32 @@ if not pcall( require, "Inspired" ) then PrintChat("You are missing Inspired.lua
 
 end
 
-local d = require 'DLib'
+d = require 'DLib'
+local IsInDistance = d.IsInDistance
 local ValidTarget = d.ValidTarget
-local GetTarget = d.GetTarget
-local GetPosForAoeSpell = d.GetPosForAoeSpell
+local GetEnemyHeroes = d.GetEnemyHeroes
+local CalcDamage = d.CalcDamage
+local GetDistance = d.GetDistance
 
 PrintChat("JunSerie | Fizz loaded.")
-PrintChat("by Jun")
+PrintChat("by Noddy")
 
-local mainMenu = Menu("APC MAIN | Fizz", "Fizz")
+local mainMenu = Menu("ADC MAIN | Fizz", "Fizz")
 mainMenu:Menu("Combo", "Combo")
-mainMenu:Menu("Combo", "Combo")
-mainMenu.Combo:Boolean("useQ", "Use Q in combo", true)
-mainMenu.Combo:Boolean("useE", "Use E in combo", true)
-mainMenu.Combo:Boolean("useR", "Use R in combo", true)
+mainMenu.Combo:Boolean("useQ", "Use Q", true)
+mainMenu.Combo:Boolean("useW", "Use W", true)
+mainMenu.Combo:Boolean("useE", "Use E", true)
+mainMenu.Combo:Boolean("useR", "Use R", true)
+mainMenu.Combo:Slider("useRx","Use R if can hit X", 1, 1)
 mainMenu.Combo:Key("Combo1", "Combo", string.byte(" "))
 ------------------------------------------------------------------
-mainMenu:Menu("Killsteal", "Killsteal")
-mainMenu.Killsteal:Boolean("ksQ", "Use Q - KS", true)
--------------------------------------------
-mainMenu:Menu("Drawings", "Drawings")
-mainMenu.Drawings:Boolean("drawR","Draw R damage", true)
-------------------------------------------------------------------
 mainMenu:Menu("Harass", "Harass")
-mainMenu.Harass:Boolean("useW", "Use W", true)
 mainMenu.Harass:Boolean("useQ", "Use Q", true)
+mainMenu.Harass:Boolean("useW", "Use W", true)
 mainMenu.Harass:Key("Harass1", "Harass", string.byte("C"))
 ------------------------------------------------------------------
 mainMenu:Key("Lasthit1", "Lasthit helper", string.byte("X"))
+------------------------------------------------------------------
 mainMenu:Menu("Items", "Items")
 mainMenu.Items:Boolean("useCut", "Bilgewater Cutlass", true)
 mainMenu.Items:Boolean("useBork", "Blade of the Ruined King", true)
@@ -46,9 +44,9 @@ local windup = 200
 local ULT = false
 
 require 'antiCC'
-addAntiCCCallback(function()
+addAntiCCCallback(function(unit, spellProc)
 	if CanUseSpell(myHero,_E) == READY then
-		CastSpell(_E)
+		CastSkillShot(_E,GetOrigin(unit))
 	end
 end)
 
@@ -129,74 +127,9 @@ local myHeroRange = GetRange(myHero)
 
 -- Items
 local CutBlade = GetItemSlot(myHero,3144)
+local bork = GetItemSlot(myHero,3153)
 local ghost = GetItemSlot(myHero,3142)
 local redpot = GetItemSlot(myHero,2140)
-
-if mainMenu.Combo.useAutoQ:Value() then
-
-for i,enemy in pairs(GetEnemyHeroes()) do
-if CanUseSpell(myHero,_Q) == READY and ValidTarget(enemy, 900) then
-	for i,minion in pairs(minionManager.objects) do
-		if MINION_ENEMY == GetTeam(minion) then
-			local QPred = GetPredictionForPlayer(myHeroPos, enemy, GetMoveSpeed
-
-(enemy),5000, 250, 1000, 0, false, false)
-			if QPred.HitChance == 1 then
-				if ValidTarget(minion, 650) and GetDistance(minion, enemy) < 
-
-400 and ValidTarget(enemy, 900) then
-					local minionC = ClosestMinion(GetOrigin(enemy), 
-
-ENEMY)
-					if ValidTarget(minionC, 650) then
-					 local checkPos = myHeroPos + (VectorWay
-
-(myHeroPos,GetOrigin(minion))/GetDistance(myHero,minion))*775
-						if minionC ~= passiveMinion and GetDistance
-
-(QPred.PredPos, checkPos) < 250 and GetCurrentHP(minionC)-GetDamagePrediction(minionC,
-
-(GetDistance(myHero,minionC)/1200)*1000 + 250) < CalcDamage(myHero, minionC, 
-
-15*GetCastLevel(myHero,_Q) + 5 + 0.85*(GetBaseDamage(myHero)+GetBonusDmg(myHero)) + (0.30*
-
-(GetBaseDamage(myHero)+GetBonusDmg(myHero))) , 0) then
-							CastTargetSpell(minion,_Q)
-						elseif  minionC == passiveMinion and 
-
-GetDistance(QPred.PredPos, checkPos) < 250 and GetCurrentHP(minionC)-GetDamagePrediction
-
-(minionC,(GetDistance(myHero,minionC)/1200)*1000 + 250) < CalcDamage(myHero, minionC, 
-
-15*GetCastLevel(myHero,_Q) + 5 + 0.85*(GetBaseDamage(myHero)+GetBonusDmg(myHero)), 0) then
-							CastTargetSpell(minion,_Q)
-						end
-					end
-				end
-			end
-		end
-	end
-end
-end
-end
--- Waves
-if CanUseSpell(myHero,_R) == READY and mainMenu.Combo.useR:Value() and ValidTarget(target, 
-
-1500) then
-if not IsInDistance(target, 550+myHitBox) and IsInDistance(target, 700) then
-	wave = 5
-elseif not IsInDistance(target, 550+myHitBox) and IsInDistance(target, 800) then
-	wave = 4
-elseif not IsInDistance(target, 550+myHitBox) and IsInDistance(target, 900) then
-	wave = 3
-elseif not IsInDistance(target, 550+myHitBox) and IsInDistance(target, 1000) then
-	wave = 2
-elseif not IsInDistance(target, 550+myHitBox) and IsInDistance(target, 1100) then
-	wave = 1
-elseif not IsInDistance(target, 550+myHitBox) and IsInDistance(target, 1200) then
-	wave = 0
-end
-end
 -- Use Items
 if mainMenu.Combo.Combo1:Value() then
 	if CutBlade >= 1 and ValidTarget(target,550) and mainMenu.Items.useCut:Value() then
