@@ -12,9 +12,9 @@ local CalcDamage = d.CalcDamage
 local GetDistance = d.GetDistance
 
 PrintChat("JunSerie | Fizz loaded.")
-PrintChat("by Noddy")
+PrintChat("by Jun")
 
-local mainMenu = Menu("ADC MAIN | Fizz", "Fizz")
+local mainMenu = Menu("JunSerie | Fizz", "Fizz")
 mainMenu:Menu("Combo", "Combo")
 mainMenu.Combo:Boolean("useQ", "Use Q", true)
 mainMenu.Combo:Boolean("useW", "Use W", true)
